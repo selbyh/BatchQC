@@ -53,7 +53,8 @@ shinyServer(function(input, output, session) {
         add_legend("fill", title = "Batches", properties = legend_props(
           title = list(fontSize = 15),
           labels = list(fontSize = 10)
-        ))
+        )) %>%
+        set_options(width = "auto", height = "auto", resizable=TRUE)
   })
   
   #interactive PCA summary
@@ -97,7 +98,8 @@ shinyServer(function(input, output, session) {
       add_legend("fill", title = "Batches", properties = legend_props(
         title = list(fontSize = 15),
         labels = list(fontSize = 10)
-      ))
+      )) %>%
+      set_options(width = "auto", height = "auto", resizable=TRUE)
   })
   vis_bp %>% bind_shiny("Boxplot")
   output$BPsummary <- renderPrint({
@@ -109,9 +111,25 @@ shinyServer(function(input, output, session) {
   })
   
   #interactive scatter plot
-  output$outliers <- renderPlot({
-    BatchQC::batchqc_corscatter(data.matrix, batch, mod = shinyInput$mod)
+  vis_cor <- reactive({
+    cormat <- cor(lcounts)
+    med_cor <- matrixStats::rowMedians(cormat)
+    suggested_cutoff <- quantile(med_cor, p=.25) - 1.5 * IQR(med_cor)
+    names(med_cor) <- seq(1:ncol(lcounts))
+    cor <- melt(med_cor)
+    cor$variable <- names(med_cor)
+    cor$batch <- as.factor(batch)
+    cor$cutoff <- rep(suggested_cutoff, nrow(cor))
+    cor %>% ggvis(~variable,~value,fill=~batch) %>% layer_points() %>% 
+      add_tooltip(function(cor){paste0("Sample: ", cor$variable, "<br>", "Batch: ",cor$batch)}, "hover") %>%
+      add_axis("y", title = "median pairwise correlation", properties=axis_props(labels=list(fontSize = 10), title = list(fontSize = 15))) %>%
+      add_axis("x", title = "", properties=axis_props(labels=list(fontSize = 10))) %>%
+      scale_numeric("y", domain = c(pmin(min(med_cor), suggested_cutoff), max(med_cor)), nice = FALSE, clamp = TRUE) %>%
+      layer_paths(~variable,~cutoff, strokeDash:=2) %>%
+      set_options(width = "auto", height = "auto", resizable=TRUE)
   })
+  vis_cor %>% bind_shiny("outliers")
+  
 
   #interactive heatmap
   output$heatmap <- renderD3heatmap({

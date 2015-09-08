@@ -25,7 +25,17 @@ shinyUI(navbarPage("BatchQC",
                               )
                             )
                    ),
-                   tabPanel("Sample Correlations", plotOutput("outliers")),
+                   tabPanel("Sample Correlations",
+                            sidebarLayout(
+                              sidebarPanel(
+                                checkboxInput("combat", "ComBat", FALSE)),
+                              mainPanel(
+                                tabsetPanel(
+                                  tabPanel("Median Pairwise Correlation", 
+                                            ggvisOutput("outliers"))
+                                  )
+                                )
+                              )),
                    tabPanel("Heatmaps",
                             tabsetPanel(
                               tabPanel("Heatmap",
@@ -84,7 +94,7 @@ shinyUI(navbarPage("BatchQC",
                               ),
                               mainPanel(
                                 tabsetPanel(
-                                  tabPanel("ComBat Plots", plotOutput("densityQQPlots")),
+                                  tabPanel("ComBat Plots", plotOutput("densityQQPlots", width = "100%")),
                                   tabPanel("Summary", verbatimTextOutput("kstest"))
                                 )
                               )
