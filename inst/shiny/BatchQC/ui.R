@@ -32,7 +32,9 @@ shinyUI(navbarPage("BatchQC",
                               mainPanel(
                                 tabsetPanel(
                                   tabPanel("Median Pairwise Correlation", 
-                                            ggvisOutput("outliers"))
+                                            ggvisOutput("outliers")),
+                                  tabPanel("Summary"),
+                                  tabPanel("Table")
                                   )
                                 )
                               )),

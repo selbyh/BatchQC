@@ -2,17 +2,7 @@ library(shiny)
 library(ggvis)
 library(d3heatmap)
 library(reshape2)
-plotPC <- function(v, d, x, y, ...){
-    pcVar <- round((d^2)/sum(d^2)*100,2)
-    
-    xl <- sprintf(paste("PC ", x, ": %.2f%% variance"), pcVar[x])  
-    yl <- sprintf(paste("PC ", y, ": %.2f%% variance"), pcVar[y]) 
-    
-    plot(v[,x], v[,y], xlab=xl, ylab=yl, ...)
-}
-
 shinyServer(function(input, output, session) {
-  #needed information from BatchQC
   pc <- shinyInput$pc
   cormat <- shinyInput$cormat
   delta.hat <- shinyInput$delta.hat
@@ -83,15 +73,21 @@ shinyServer(function(input, output, session) {
     dat1 <- BP()
     colnames(dat1) <- seq(1:ncol(dat1))
     dat2 <- melt(as.data.frame(dat1))
-    dat2$batch <- as.factor(unlist(lapply(1:length(batch5), function(x) rep(batch5[x], nrow(dat1)))))
-    dat2 %>% group_by(batch) %>%
-      ggvis(~variable, ~value, fill = ~batch) %>% layer_boxplots() %>%
-      add_tooltip(function(dat2){paste0("Sample: ", dat2$variable, "<br>", "Batch: ",dat2$batch)}, "hover") %>%
+    dat2$Batch <- as.factor(unlist(lapply(1:length(batch5), function(x) rep(batch5[x], nrow(dat1)))))
+    colnames(dat2) <- c("Sample","Expression", "Batch")
+    all_values <- function(x) {
+      if(is.null(x)) return(NULL)
+      paste0(names(x), ": ", format(x), collapse = "<br />")
+    }
+    dat2 %>%
+      ggvis(~Sample, ~Expression, fill = ~Batch) %>% layer_boxplots() %>%
+      layer_points(prop("x", ~Sample, scale = "xcenter"), fill:="black") %>%
+      add_tooltip(all_values, "hover") %>%
       add_axis("x", title = paste(input$noSamples, "Sample(s) Per Batch", sep =" "), properties = axis_props(
         title = list(fontSize = 15),
         labels = list(fontSize = 5, angle = 90)
       )) %>%
-      add_axis("y", title = "Exression", properties = axis_props(
+      add_axis("y", title = "Expression", properties = axis_props(
         title = list(fontSize = 15),
         labels = list(fontSize = 10)
       )) %>%
@@ -123,7 +119,7 @@ shinyServer(function(input, output, session) {
     cor %>% ggvis(~variable,~value,fill=~batch) %>% layer_points() %>% 
       add_tooltip(function(cor){paste0("Sample: ", cor$variable, "<br>", "Batch: ",cor$batch)}, "hover") %>%
       add_axis("y", title = "median pairwise correlation", properties=axis_props(labels=list(fontSize = 10), title = list(fontSize = 15))) %>%
-      add_axis("x", title = "", properties=axis_props(labels=list(fontSize = 10))) %>%
+      add_axis("x", title = "", properties=axis_props(labels=list(fontSize = 10,angle = 90))) %>%
       scale_numeric("y", domain = c(pmin(min(med_cor), suggested_cutoff), max(med_cor)), nice = FALSE, clamp = TRUE) %>%
       layer_paths(~variable,~cutoff, strokeDash:=2) %>%
       set_options(width = "auto", height = "auto", resizable=TRUE)
