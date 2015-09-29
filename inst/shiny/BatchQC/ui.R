@@ -8,12 +8,15 @@ minbatch <- function(batch1){
   return(min(unlist(lapply(1:length(batch3), function(x) length(batch3[[x]])))))
 }
 
-shinyUI(navbarPage("BatchQC",
+shinyUI(navbarPage(strong("BatchQC"),
                    tabPanel("Box Plots",
                             sidebarLayout(
                               sidebarPanel(
-                                numericInput('noSamples', 'No. of Sample(s) Per Batch', 1,
-                                             min = 1, max = minbatch(batch)),
+                                sliderInput("noSamples",
+                                            "No. of Samples per Batch:",
+                                            min = as.numeric(1),
+                                            max = as.numeric(minbatch(batch)),
+                                            value = as.numeric(1)),
                                 checkboxInput("combat", "ComBat", FALSE)
                               ),
                               mainPanel(
@@ -31,7 +34,7 @@ shinyUI(navbarPage("BatchQC",
                                 checkboxInput("combat", "ComBat", FALSE)),
                               mainPanel(
                                 tabsetPanel(
-                                  tabPanel("Median Pairwise Correlation", 
+                                  tabPanel("Sample Correlations", 
                                             ggvisOutput("outliers")),
                                   tabPanel("Summary"),
                                   tabPanel("Table")

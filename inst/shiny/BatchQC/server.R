@@ -80,8 +80,8 @@ shinyServer(function(input, output, session) {
       paste0(names(x), ": ", format(x), collapse = "<br />")
     }
     dat2 %>%
-      ggvis(~Sample, ~Expression, fill = ~Batch) %>% layer_boxplots() %>%
-      layer_points(prop("x", ~Sample, scale = "xcenter"), fill:="black") %>%
+      ggvis(~Sample, ~Expression, fill = ~Batch) %>% layer_points(prop("x", ~Sample, scale = "xcenter"), size:=20) %>% 
+      layer_boxplots(size:=20) %>%
       add_tooltip(all_values, "hover") %>%
       add_axis("x", title = paste(input$noSamples, "Sample(s) Per Batch", sep =" "), properties = axis_props(
         title = list(fontSize = 15),
